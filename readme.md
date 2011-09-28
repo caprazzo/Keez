@@ -82,27 +82,22 @@ See (see src/main/java/net/caprazzi/keez/Keez.java for some documentation)
 	// delete data
 	db.delete("somekey", new Delete() {
 
-		@Override
 		public void deleted(String key, byte[] data) {
 			System.out.println("Deleted key ["+key+"] with data " + new String(data));
 		}
 
-		@Override
 		public void notFound(String key) {}
 		
 	});
 	
 	// try to delete again
-	// delete data
 	db.delete("somekey", new Delete() {
 
-
-		@Override
 		public void notFound(String key) {
 			System.out.println("Key Not found: " + key);
 		}
 		
-		@Override
 		public void deleted(String key, byte[] data) {}
 		
 	});		
+	
