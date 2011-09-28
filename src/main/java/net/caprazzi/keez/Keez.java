@@ -5,6 +5,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Simple embedded key-value store API.
+ * 
+ * The API supports 3 operations (put, get, delete).
+ * 
+ * Put operations require to specify a revision number
+ * 
+ * All operations accept a callback object that is used to
+ * return data and results to the caller.
+ * 
  */
 public class Keez {
 
