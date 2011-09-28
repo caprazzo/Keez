@@ -9,19 +9,16 @@ Api "Features":
 * async/callback semantics
 * optimistic locking (using revision numbers)   
 
-Docs:
+The only provided implementation 'KeezFileDb' is cheap and dirty and works.
 
-* see Example.java for an example usage 
-* see Keez.java for some documentation
-
-The only provided implementation 'KeezFileDb' is cheap and dirty but will work.
-
-
-Example usage (from src/main/java/net/caprazzi/keez/Example.java)
-
-See (see src/main/java/net/caprazzi/keez/Keez.java for some documentation)
+Example usage
+=============
 
 ```java
+
+	// FROM src/main/java/net/caprazzi/keez/Example.java
+	
+	
 	Keez.Db db = new KeezFileDb(".", "kz");		
 		
 	// try get an key that does not exist		
