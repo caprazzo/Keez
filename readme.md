@@ -11,6 +11,8 @@ Api "Features":
 
 The only provided implementation 'KeezFileDb' is cheap and dirty and works.
 
+For docs, see src/main/java/net/caprazzi/keez/Keez.java
+
 Example usage
 =============
 
