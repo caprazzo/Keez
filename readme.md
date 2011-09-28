@@ -20,7 +20,7 @@ The only provided implementation 'KeezFileDb' is cheap and dirty but will work.
 Example usage (from src/main/java/net/caprazzi/keez/Example.java)
 
 See (see src/main/java/net/caprazzi/keez/Keez.java for some documentation)
-
+```java
 	Keez.Db db = new KeezFileDb(".", "kz");		
 		
 	// try get an key that does not exist		
@@ -100,4 +100,4 @@ See (see src/main/java/net/caprazzi/keez/Keez.java for some documentation)
 		public void deleted(String key, byte[] data) {}
 		
 	});		
-	
+```
