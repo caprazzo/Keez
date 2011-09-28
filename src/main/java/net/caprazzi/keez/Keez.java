@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
  * All operations accept a callback object that is used to
  * return data and results to the caller.
  * 
+ * @see Example.java for usage
+ * 
  */
 public class Keez {
 
