@@ -25,8 +25,8 @@ public class Example {
 		byte[] data = "somedata".getBytes();
 		db.put("somekey", 0, data, new Put() {
 			
-			public void ok(String key) {
-				System.out.println(key + " succesfully created");
+			public void ok(String key, int rev) {
+				System.out.println(key + " succesfully created at rev " + rev);
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
@@ -46,8 +46,8 @@ public class Example {
 		byte[] betterdata = "betterdata".getBytes();
 		db.put("somekey", 1, betterdata, new Put() {
 			
-			public void ok(String key) {
-				System.out.println(key + " succesfully updated");
+			public void ok(String key, int rev) {
+				System.out.println(key + " succesfully updated at rev" + rev);
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
@@ -61,8 +61,8 @@ public class Example {
 				System.out.println("Collision while trying to update key [" + key + "] at revision " + yourRev + ": key is at revision " + foundRev);
 			}
 			
-			public void ok(String key) {
-				System.out.println(key + " succesfully updated");
+			public void ok(String key, int rev) {
+				System.out.println(key + " succesfully updated at rev " + rev);
 			}
 			
 		});
@@ -81,9 +81,7 @@ public class Example {
 		});
 		
 		// try to delete again
-		// delete data
 		db.delete("somekey", new Delete() {
-
 
 			@Override
 			public void notFound(String key) {

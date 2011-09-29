@@ -1,5 +1,7 @@
 package net.caprazzi.keez;
 
+import net.caprazzi.keez.Keez.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,8 @@ public class Keez {
 		 */
 		public void delete(String key, Delete callback);
 
+		public void list(List list);
+
 	}
 
 	public static abstract class Get {
@@ -99,7 +103,7 @@ public class Keez {
 		 * 
 		 * @param key
 		 */
-		public abstract void ok(String key);
+		public abstract void ok(String key, int rev);
 
 		/**
 		 * Invoked when there is a collision in the key revision
@@ -153,6 +157,45 @@ public class Keez {
 			logger.warn("Exception while deleting key " + key, e);
 		};
 
+	}
+	
+	public static abstract class List {
+
+		public void entries(Iterable<Entry> entries) {
+			// TODO Auto-generated method stub
+		}
+
+		public void error(Exception ex) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
+	public static class Entry {
+
+		private final String key;
+		private final int revision;
+		private final byte[] data;
+
+		public Entry(String key, int revision, byte[] data) {
+			this.key = key;
+			this.revision = revision;
+			this.data = data;
+		}
+
+		public byte[] getData() {
+			return data;
+		}
+
+		public String getKey() {
+			return key;
+		}
+
+		public int getRevision() {
+			return revision;
+		}
+		
 	}
 
 }

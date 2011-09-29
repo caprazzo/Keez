@@ -1,16 +1,17 @@
 package net.caprazzi.keez.simpleFileDb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.caprazzi.keez.Keez.Delete;
+import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 import net.caprazzi.keez.simpleFileDb.KeezFileDb;
 
@@ -18,11 +19,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
+
 public class KeezFileDbTest {
 
 	File testDir;
 	private KeezFileDb db;
 	private byte[] data = new byte[] { 'a','b','c' };
+	private byte[] moredata = new byte[] { 'a','b','c', 'd' };
+	private byte[] betterdata = new byte[] { 'a','b','c', 'd', 'e' };
 	
 	@Before
 	public void setUp() {
@@ -31,16 +38,20 @@ public class KeezFileDbTest {
 	}
 
 	@After
-	public void tearDown() {
-		testDir.delete();
+	public void tearDown() throws IOException {
+		
+		if (!testDir.delete()) {
+			//throw new RuntimeException("failed to delete " + testDir);
+		}
 	}	
 
 	@Test
 	public void put_should_create_file_on_ok() {
 		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("newKey", 0, data, new PutTestHelp() {			
-			public void ok(String key) {
+			public void ok(String key, int revision) {
 				assertEquals("newKey", key);
+				assertEquals(1, revision);
 				flag.set(true);
 			}
 		});		
@@ -58,6 +69,40 @@ public class KeezFileDbTest {
 		
 		db.put("key", 2, data, PutNoop);
 		assertTrue(findFile(testDir, "pfx-key.3"));
+	}
+	
+	@Test
+	public void put_should_increase_revision_at_each_update() {
+		final AtomicBoolean flag = new AtomicBoolean();
+		db.put("key", 0, data, new PutTestHelp() {
+			@Override
+			public void ok(String key, int revision) {
+				assertEquals(1, revision);
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+		
+		flag.set(false);
+		db.put("key", 1, data, new PutTestHelp() {
+			@Override
+			public void ok(String key, int revision) {
+				assertEquals(2, revision);
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+		flag.set(false);
+		
+		db.put("key", 2, data, new PutTestHelp() {
+			@Override
+			public void ok(String key, int revision) {
+				assertEquals(3, revision);
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+		flag.set(false);
 	}
 	
 	@Test
@@ -199,7 +244,6 @@ public class KeezFileDbTest {
 		assertFalse(findFile(testDir, "pfx-key.3"));
 	}
 	
-	
 	@Test
 	public void delete_should_return_latest_data_before_delete() {
 		final AtomicBoolean flag = new AtomicBoolean();
@@ -217,6 +261,103 @@ public class KeezFileDbTest {
 		assertTrue(flag.get());
 	}
 	
+	@Test
+	public void list_should_find_no_entries_if_empty() {
+		final AtomicBoolean flag = new AtomicBoolean();
+		db.list(new ListTestHelp() {
+			@Override
+			public void entries(Iterable<Entry> entries) {
+				assertFalse(entries.iterator().hasNext());
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+	}
+	
+	@Test
+	public void list_should_find_all_entries() {
+		final AtomicBoolean flag = new AtomicBoolean();
+		db.put("key0", 0, data, PutNoop);
+		db.put("key1", 0, moredata, PutNoop);
+		db.put("key2", 0, betterdata, PutNoop);
+		
+		db.list(new ListTestHelp() {
+			@Override
+			public void entries(Iterable<Entry> entries) {
+				Entry[] array = Iterables.toArray(entries, Entry.class);
+				assertEquals(3, array.length);
+								
+				assertNotNull(Iterables.find(entries, new Predicate<Entry>() {
+					public boolean apply(Entry input) {
+						return (
+								input.getKey().equals("key0")
+							&&	Arrays.equals(input.getData(), data)
+							&& input.getRevision() == 1);
+					}
+				}));
+				
+				assertNotNull(Iterables.find(entries, new Predicate<Entry>() {
+					public boolean apply(Entry input) {
+						return (
+								input.getKey().equals("key1")
+							&&	Arrays.equals(input.getData(), moredata)
+							&& input.getRevision() == 1);
+					}
+				}));
+				
+				assertNotNull(Iterables.find(entries, new Predicate<Entry>() {
+					public boolean apply(Entry input) {
+						return (
+								input.getKey().equals("key2")
+							&&	Arrays.equals(input.getData(), betterdata)
+							&& input.getRevision() == 1);
+					}
+				}));
+				
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+	}
+	
+	@Test
+	public void list_should_find_all_entries_last_revision() {
+		final AtomicBoolean flag = new AtomicBoolean();
+		db.put("key0", 0, data, PutNoop);
+		db.put("key0", 1, moredata, PutNoop);
+		db.put("key2", 0, betterdata, PutNoop);
+		db.put("key2", 1, betterdata, PutNoop);
+		
+		db.list(new ListTestHelp() {
+			@Override
+			public void entries(Iterable<Entry> entries) {
+				Entry[] array = Iterables.toArray(entries, Entry.class);
+				assertEquals(2, array.length);
+								
+				assertNotNull(Iterables.find(entries, new Predicate<Entry>() {
+					public boolean apply(Entry input) {
+						return (
+								input.getKey().equals("key0")
+							&&	Arrays.equals(input.getData(), moredata)
+							&& input.getRevision() == 2);
+					}
+				}));
+				
+				assertNotNull(Iterables.find(entries, new Predicate<Entry>() {
+					public boolean apply(Entry input) {
+						return (
+								input.getKey().equals("key2")
+							&&	Arrays.equals(input.getData(), betterdata)
+							&& input.getRevision() == 2);
+					}
+				}));
+				
+				flag.set(true);
+			}
+		});
+		assertTrue(flag.get());
+	}
+		
 	@Test
 	public void should_error_if_bad_char_in_key() {
 		final AtomicBoolean flag = new AtomicBoolean();
@@ -285,7 +426,7 @@ public class KeezFileDbTest {
 	}
 	
 	private static final Put PutNoop = new Put() {
-		@Override public void ok(String key) {}
+		@Override public void ok(String key, int revision) {}
 		@Override public void collision(String key, int yourRev, int foundRev) {}
 	}; 
 	
@@ -297,7 +438,7 @@ public class KeezFileDbTest {
 	public static class PutTestHelp extends Put {
 
 		@Override
-		public void ok(String key) {
+		public void ok(String key, int revision) {
 			throw new RuntimeException("unexpected put success");
 		}
 
@@ -348,6 +489,13 @@ public class KeezFileDbTest {
 			throw new RuntimeException("unexpected error", e);
 		}
 		
+	}
+	
+	public static class ListTestHelp extends List {
+		@Override
+		public void entries(Iterable<Entry> entries) {
+			throw new RuntimeException("unexpected entries call");
+		}
 	}
 	
 }

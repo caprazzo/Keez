@@ -6,14 +6,21 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.io.IOUtils;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 import net.caprazzi.keez.Keez;
 
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
-
-import org.eclipse.jetty.util.IO;
 
 /**
  * Naive file-based implementation of Keez
@@ -66,13 +73,15 @@ public class KeezFileDb implements Keez.Db {
 						return;
 					}
 				}
+				
+				int foundRev = rev + 1;
 												
-				File newFile = new File(filePath(key, rev + 1));
+				File newFile = new File(filePath(key, foundRev));
 				FileOutputStream writer = new FileOutputStream(newFile);
 				writer.write(data);
 				writer.close();
 
-				callback.ok(key);
+				callback.ok(key, foundRev);
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
@@ -96,12 +105,14 @@ public class KeezFileDb implements Keez.Db {
 					return;
 				}
 				
-				File newFile = new File(filePath(key, 1));
+				int foundRev = 1;
+				
+				File newFile = new File(filePath(key, foundRev));
 				FileOutputStream writer = new FileOutputStream(newFile);
 				writer.write(data);
 				writer.close();
 
-				callback.ok(key);				
+				callback.ok(key, foundRev);				
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
@@ -127,7 +138,7 @@ public class KeezFileDb implements Keez.Db {
 			
 			try {
 				FileInputStream in = new FileInputStream(f);
-				byte[] data = IO.readBytes(in);
+				byte[] data = IOUtils.toByteArray(in);
 				in.close();
 				callback.found(key, foundRev, data);
 			} catch (FileNotFoundException ex) {
@@ -156,7 +167,7 @@ public class KeezFileDb implements Keez.Db {
 			File f = new File(filePath(key, foundRev));
 			try {
 				FileInputStream in = new FileInputStream(f);
-				byte[] data = IO.readBytes(in);
+				byte[] data = IOUtils.toByteArray(in);
 				in.close();
 				
 				// delete all key files
@@ -172,6 +183,30 @@ public class KeezFileDb implements Keez.Db {
 			} catch (IOException e) {
 				callback.error(key, e);
 			}
+		}
+	}
+	
+	@Override
+	public void list(final List callback) {
+		HashMap<String, Integer> keys = findLatestRevisions();
+		try {
+			Iterable<net.caprazzi.keez.Keez.Entry> entries = Iterables.transform(keys.entrySet(), new Function<Entry<String, Integer>, Keez.Entry>() {
+				@Override
+				public net.caprazzi.keez.Keez.Entry apply(Entry<String, Integer> e) {
+					File f = new File(filePath(e.getKey(), e.getValue()));
+					byte[] data;
+					try {
+						data = IOUtils.toByteArray(new FileInputStream(f));
+						return new Keez.Entry(e.getKey(), e.getValue(), data);
+					} catch (Exception ex) {
+						throw new RuntimeException(ex);
+					} 			
+				}
+			});
+			callback.entries(entries);
+		}
+		catch (Exception e) {
+			callback.error(e);
 		}
 	}
 	
@@ -196,6 +231,34 @@ public class KeezFileDb implements Keez.Db {
 		return files;
 	}
 	
+	private HashMap<String, Integer> findLatestRevisions() {
+		File[] files = listAllFiles();
+		HashMap<String,Integer> map = new HashMap<String, Integer>();		
+		for(File file : files) {
+			Integer rev = getRevision(file);
+			String key = getKey(file);
+			Integer oldRevision = map.get(key);
+			if (oldRevision != null) {
+				map.put(key, Math.max(oldRevision, rev));
+			}
+			else map.put(key, rev);
+		}
+		return map;
+	}
+	
+	private String getKey(File file) {
+		return file.getName().substring(prefix.length() + 1).split("\\.")[0];
+	}
+
+	private File[] listAllFiles() {
+		return directory.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(prefix + "-");
+			}
+		});
+	}
+
 	/**
 	 * Build file path from key and revision
 	 * @param key
@@ -209,5 +272,7 @@ public class KeezFileDb implements Keez.Db {
 	private boolean isValidKey(String key) {
 		 return key.matches("[A-Za-z0-9]+");
 	}
+
+	
 
 }
