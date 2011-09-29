@@ -7,20 +7,18 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
+
+import net.caprazzi.keez.Keez;
+import net.caprazzi.keez.Keez.Delete;
+import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.List;
+import net.caprazzi.keez.Keez.Put;
 
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-
-import net.caprazzi.keez.Keez;
-
-import net.caprazzi.keez.Keez.Delete;
-import net.caprazzi.keez.Keez.Get;
-import net.caprazzi.keez.Keez.List;
-import net.caprazzi.keez.Keez.Put;
 
 /**
  * Naive file-based implementation of Keez
@@ -49,6 +47,8 @@ public class KeezFileDb implements Keez.Db {
 
 	@Override
 	public void put(String key, int rev, byte[] data, Put callback) {
+		
+		System.out.println("PUTTING " + new String(data));
 		if (rev == 0) {
 			create(key, data, callback);
 			return;
@@ -173,7 +173,8 @@ public class KeezFileDb implements Keez.Db {
 				// delete all key files
 				for (File keyFile : keyFiles) {
 					if (!keyFile.delete()) {
-						callback.error(key, new Exception("Could not delete one of the files."));
+						callback.error(key, new Exception("Could not delete one of the files for [" + key + "]: " + keyFile 
+								+ " exists: " + keyFile.exists() + " w:" + keyFile.canWrite() + " "));
 						return;
 					}
 				}
@@ -196,7 +197,9 @@ public class KeezFileDb implements Keez.Db {
 					File f = new File(filePath(e.getKey(), e.getValue()));
 					byte[] data;
 					try {
-						data = IOUtils.toByteArray(new FileInputStream(f));
+						FileInputStream in = new FileInputStream(f);
+						data = IOUtils.toByteArray(in);
+						in.close();
 						return new Keez.Entry(e.getKey(), e.getValue(), data);
 					} catch (Exception ex) {
 						throw new RuntimeException(ex);

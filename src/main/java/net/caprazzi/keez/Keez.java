@@ -1,14 +1,12 @@
 package net.caprazzi.keez;
 
-import net.caprazzi.keez.Keez.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Simple embedded key-value store API.
  * 
- * The API supports 3 operations (put, get, delete).
+ * The API supports 4 operations (put, get, delete, list).
  * 
  * Put operations require to specify a revision number
  * 
@@ -65,8 +63,15 @@ public class Keez {
 		 */
 		public void delete(String key, Delete callback);
 
-		public void list(List list);
-
+		/**
+		 * List all keys in the database.
+		 * 
+		 * callback.entries is invoked even if the database is empty
+		 * callback.error is called in case of any exception
+		 * 
+		 * @param list
+		 */
+		public void list(List callback);
 	}
 
 	public static abstract class Get {
@@ -85,16 +90,14 @@ public class Keez {
 		 * @param key
 		 */
 		public abstract void notFound(String key);
-
+				
 		/**
 		 * Invoked on errors but not on "not found"
 		 * 
 		 * @param key
 		 * @param e
 		 */
-		public void error(String key, Exception e) {
-			logger.warn("Exception while retrieveing key " + key, e);
-		};
+		public abstract void error(String key, Exception e);
 	}
 
 	public static abstract class Put {
@@ -161,9 +164,7 @@ public class Keez {
 	
 	public static abstract class List {
 
-		public void entries(Iterable<Entry> entries) {
-			// TODO Auto-generated method stub
-		}
+		public abstract void entries(Iterable<Entry> entries);
 
 		public void error(Exception ex) {
 			// TODO Auto-generated method stub

@@ -1,7 +1,9 @@
 package net.caprazzi.keez;
 
 import net.caprazzi.keez.Keez.Delete;
+import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 import net.caprazzi.keez.simpleFileDb.KeezFileDb;
 
@@ -19,6 +21,13 @@ public class Example {
 			}
 			
 			public void found(String key, int rev, byte[] data) {}
+
+			@Override
+			public void error(String key, Exception e) {
+				System.out.println("error while creating " + key);
+				e.printStackTrace();
+			}
+			
 		});
 		
 		// put a key
@@ -39,7 +48,24 @@ public class Example {
 				System.out.println("Found data for key [" + key +"] at rev " + rev + ": " + new String(data));
 			}
 			
-			public void notFound(String key) {}			
+			public void notFound(String key) {}		
+			
+			@Override
+			public void error(String key, Exception e) {
+				System.out.println("error while creating " + key);
+				e.printStackTrace();
+			}
+		});
+		
+		// put another key
+		byte[] moredata = "moredata".getBytes();
+		db.put("someotherkey", 0, moredata, new Put() {
+			
+			public void ok(String key, int rev) {
+				System.out.println(key + " succesfully created at rev " + rev);
+			}
+
+			public void collision(String key, int yourRev, int foundRev) {}
 		});
 		
 		// update a key (notice rev 1)
@@ -51,6 +77,16 @@ public class Example {
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
+		});
+		
+		// list all keys
+		db.list(new List() {
+			@Override
+			public void entries(Iterable<Entry> entries) {
+				for(Keez.Entry e : entries) {
+					System.out.println("Found " + e.getKey() + "@" + e.getRevision() + ": " + new String(e.getData()));
+				}
+			}
 		});
 		
 		// get a collision
