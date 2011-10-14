@@ -214,6 +214,24 @@ public class KeezFileDbTest {
 	}
 	
 	@Test
+	public void should_get_latest_revision_with_10_updates() {
+		final AtomicBoolean flag = new AtomicBoolean();
+		for (int i=0; i<10; i++) {
+			db.put("somekey", i, data, PutNoop);
+		}
+		db.put("somekey", 10, "latest".getBytes(), PutNoop);
+		db.get("somekey", new GetTestHelp() {
+			public void found(String key, int rev, byte[] foundData) {
+				assertEquals(11, rev);
+				assertEquals("somekey", key);
+				assertTrue(Arrays.equals("latest".getBytes(), foundData));
+				flag.set(true);				
+			}
+		});		
+		assertTrue(flag.get());
+	}
+	
+	@Test
 	public void delete_should_get_not_found_if_no_key() {
 		final AtomicBoolean flag = new AtomicBoolean();
 		db.delete("somekey", new Delete() {

@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -231,6 +233,18 @@ public class KeezFileDb implements Keez.Db {
 				return name.startsWith(prefix + "-" + key + ".");
 			}
 		});
+		
+		
+		Arrays.sort(files, new Comparator<File>() {
+			@Override
+			public int compare(File fa, File fb) {
+				Integer reva = getRevision(fa);
+				Integer revb = getRevision(fb);
+				return reva.compareTo(revb);
+			}
+			
+		});
+		
 		return files;
 	}
 	
