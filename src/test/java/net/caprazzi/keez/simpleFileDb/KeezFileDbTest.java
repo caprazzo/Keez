@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Entry;
@@ -30,7 +29,7 @@ public class KeezFileDbTest {
 	private byte[] data = new byte[] { 'a','b','c' };
 	private byte[] moredata = new byte[] { 'a','b','c', 'd' };
 	private byte[] betterdata = new byte[] { 'a','b','c', 'd', 'e' };
-	
+	private boolean flag = false;
 	@Before
 	public void setUp() {
 		testDir = createTempDir();
@@ -47,15 +46,14 @@ public class KeezFileDbTest {
 
 	@Test
 	public void put_should_create_file_on_ok() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("newKey", 0, data, new PutTestHelp() {			
 			public void ok(String key, int revision) {
 				assertEquals("newKey", key);
 				assertEquals(1, revision);
-				flag.set(true);
+				flag = true;
 			}
 		});		
-		assertTrue(flag.get());
+		assertTrue(flag);
 		assertTrue(findFile(testDir, "pfx-newKey.1"));		
 	}
 	
@@ -73,41 +71,39 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void put_should_increase_revision_at_each_update() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("key", 0, data, new PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(1, revision);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 		
-		flag.set(false);
+		flag = false;
 		db.put("key", 1, data, new PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(2, revision);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
-		flag.set(false);
+		assertTrue(flag);
+		flag = false;
 		
 		db.put("key", 2, data, new PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(3, revision);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
-		flag.set(false);
+		assertTrue(flag);
+		flag = false;
 	}
 	
 	@Test
 	public void put_should_collide_if_key_exists() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("key", 0, data, PutNoop);
 		db.put("key", 0, data, new PutTestHelp() {
 			@Override
@@ -115,29 +111,27 @@ public class KeezFileDbTest {
 				assertEquals("key", key);
 				assertEquals(0, yourRev);
 				assertEquals(1, foundRev);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void put_should_collide_if_rev_not_zero_on_create() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("newKey", 1, data, new PutTestHelp() {			
 			public void collision(String key, int yourRev, int foundRev) {
 				assertEquals("newKey", key);
 				assertEquals(1, yourRev);
 				assertEquals(-1, foundRev);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void put_should_collide_if_put_with_old_rev() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("newKey", 0, data, PutNoop);		
 		db.put("newKey", 1, data, PutNoop);		
 		db.put("newKey", 1, data, new PutTestHelp() {
@@ -145,15 +139,14 @@ public class KeezFileDbTest {
 				assertEquals("newKey", key);
 				assertEquals(1, yourRev);
 				assertEquals(2, nextRev);
-				flag.set(true);
+				flag = true;
 			}			
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void put_should_collide_if_put_with_too_new_rev() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("newKey", 0, data, PutNoop);	
 		db.put("newKey", 1, data, PutNoop);
 		db.put("newKey", 3, data, new PutTestHelp() {
@@ -161,43 +154,40 @@ public class KeezFileDbTest {
 				assertEquals("newKey", key);
 				assertEquals(3, yourRev);
 				assertEquals(2, foundRev);
-				flag.set(true);
+				flag = true;
 			}			
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void get_should_invoke_not_found_on_no_key() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.get("somekey", new GetTestHelp() {
 			public void notFound(String key) {
 				assertEquals("somekey", key);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void get_should_get_value_if_key_exists() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("somekey", 0, data, PutNoop);		
 		db.get("somekey", new GetTestHelp() {
 			public void found(String key, int rev, byte[] foundData) {
 				assertEquals(1, rev);
 				assertEquals("somekey", key);
 				assertTrue(Arrays.equals(data, foundData));
-				flag.set(true);				
+				flag = true;		
 			}
 		});
 		
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void should_get_latest_revision_if_key_exists() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("somekey", 0, data, PutNoop);
 		db.put("somekey", 1, "otherdata".getBytes(), PutNoop);
 		db.put("somekey", 2, "latest".getBytes(), PutNoop);
@@ -207,15 +197,14 @@ public class KeezFileDbTest {
 				assertEquals(3, rev);
 				assertEquals("somekey", key);
 				assertTrue(Arrays.equals("latest".getBytes(), foundData));
-				flag.set(true);				
+				flag = true;		
 			}
 		});		
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void should_get_latest_revision_with_10_updates() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		for (int i=0; i<10; i++) {
 			db.put("somekey", i, data, PutNoop);
 		}
@@ -225,24 +214,23 @@ public class KeezFileDbTest {
 				assertEquals(11, rev);
 				assertEquals("somekey", key);
 				assertTrue(Arrays.equals("latest".getBytes(), foundData));
-				flag.set(true);				
+				flag = true;		
 			}
 		});		
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void delete_should_get_not_found_if_no_key() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.delete("somekey", new Delete() {
 			public void deleted(String key, byte[] data) {
 			}
 			public void notFound(String key) {
 				assertEquals("somekey", key);
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
@@ -264,7 +252,6 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void delete_should_return_latest_data_before_delete() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("key", 0, data, PutNoop);
 		db.put("key", 1, "newData".getBytes(), PutNoop);
 		db.put("key", 2, "latestData".getBytes(), PutNoop);
@@ -273,28 +260,26 @@ public class KeezFileDbTest {
 			@Override
 			public void deleted(String key, byte[] data) {
 				assertTrue(Arrays.equals("latestData".getBytes(), data));
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void list_should_find_no_entries_if_empty() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.list(new ListTestHelp() {
 			@Override
 			public void entries(Iterable<Entry> entries) {
 				assertFalse(entries.iterator().hasNext());
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void list_should_find_all_entries() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("key0", 0, data, PutNoop);
 		db.put("key1", 0, moredata, PutNoop);
 		db.put("key2", 0, betterdata, PutNoop);
@@ -332,15 +317,14 @@ public class KeezFileDbTest {
 					}
 				}));
 				
-				flag.set(true);
+				flag = true;;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	@Test
 	public void list_should_find_all_entries_last_revision() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("key0", 0, data, PutNoop);
 		db.put("key0", 1, moredata, PutNoop);
 		db.put("key2", 0, betterdata, PutNoop);
@@ -370,49 +354,48 @@ public class KeezFileDbTest {
 					}
 				}));
 				
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 		
 	@Test
 	public void should_error_if_bad_char_in_key() {
-		final AtomicBoolean flag = new AtomicBoolean();
 		db.put("  ", 0, data, new PutTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 		
-		flag.set(false);
+		flag = false;
 		db.put("/", 1, data, new PutTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 		
-		flag.set(false);
+		flag = false;
 		db.get("/", new GetTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 		
-		flag.set(false);
+		flag = false;
 		db.delete("/", new DeleteTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
-				flag.set(true);
+				flag = true;
 			}
 		});
-		assertTrue(flag.get());
+		assertTrue(flag);
 	}
 	
 	//////// TEST UTILS BELOW ////////////
@@ -446,6 +429,7 @@ public class KeezFileDbTest {
 	private static final Put PutNoop = new Put() {
 		@Override public void ok(String key, int revision) {}
 		@Override public void collision(String key, int yourRev, int foundRev) {}
+		@Override public void error(String key, Exception e) {}
 	}; 
 	
 	private static final Delete DeleteNoop = new Delete() {

@@ -126,9 +126,8 @@ public class Keez {
 		 * @param e
 		 *            underlying exception
 		 */
-		public void error(String key, Exception e) {
-			logger.warn("Exception while putting key " + key, e);
-		};
+		public abstract void error(String key, Exception e);
+
 	}
 
 	public static abstract class Delete {

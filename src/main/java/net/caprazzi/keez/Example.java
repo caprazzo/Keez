@@ -39,6 +39,10 @@ public class Example {
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
+
+			@Override
+			public void error(String key, Exception e) {
+			}
 		});
 		
 		// read back the key
@@ -66,6 +70,12 @@ public class Example {
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
+
+			@Override
+			public void error(String key, Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 		
 		// update a key (notice rev 1)
@@ -77,6 +87,12 @@ public class Example {
 			}
 
 			public void collision(String key, int yourRev, int foundRev) {}
+
+			@Override
+			public void error(String key, Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 		
 		// list all keys
@@ -99,6 +115,12 @@ public class Example {
 			
 			public void ok(String key, int rev) {
 				System.out.println(key + " succesfully updated at rev " + rev);
+			}
+
+			@Override
+			public void error(String key, Exception e) {
+				// TODO Auto-generated method stub
+				
 			}
 			
 		});
