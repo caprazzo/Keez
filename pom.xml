@@ -5,12 +5,23 @@
 
 	<groupId>net.caprazzi.keez</groupId>
 	<artifactId>Keez</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.5</version>
 
 	<name>Keez</name>
 	<description>Simple Embeddable Key-Value Store</description>
 
 	<packaging>jar</packaging>
+	
+	<distributionManagement>
+		<repository>
+			<id>repo</id>
+			<url>https://github.com/mcaprari/mcaprari-maven-repo/raw/master/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshot-repo</id>
+			<url>https://github.com/mcaprari/mcaprari-maven-repo/raw/master/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<build>
 		<plugins>

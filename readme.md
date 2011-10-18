@@ -138,3 +138,8 @@ Example usage
 		
 	});		
 ```
+
+## For developers
+
+#### Deploy to local maven repo
+mvn -DaltDeploymentRepository=snapshot-repo::default::file:../mcaprari-maven-repo/releases/ clean deploy
