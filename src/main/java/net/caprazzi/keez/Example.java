@@ -11,7 +11,7 @@ public class Example {
 		
 	public static void main(String[] args) {
 		
-		Keez.Db db = new KeezFileDb(".", "kz");		
+		Keez.Db db = new KeezFileDb(".", "kz", false);		
 		
 		// try get an key that does not exist		
 		db.get("somekey", new Get() {

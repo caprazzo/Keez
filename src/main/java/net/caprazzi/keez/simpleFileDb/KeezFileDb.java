@@ -44,11 +44,14 @@ public class KeezFileDb implements Keez.Db {
 	private final String prefix;
 	private boolean autoPurge;
 
-	public KeezFileDb(String directory, String prefix) {
+	public KeezFileDb(String directory, String prefix, boolean createDir) {
 		if (!isValidKey(prefix)) {
 			throw new RuntimeException("invalid character in prefix [" + prefix + "]");
 		}
 		this.directory = new File(directory);
+		if (createDir && !this.directory.exists()) {
+			this.directory.mkdir();
+		}
 		this.prefix = prefix;
 	}
 

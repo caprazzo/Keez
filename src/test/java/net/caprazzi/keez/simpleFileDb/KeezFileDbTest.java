@@ -33,7 +33,8 @@ public class KeezFileDbTest {
 	@Before
 	public void setUp() {
 		testDir = createTempDir();
-		db = new KeezFileDb(testDir.getAbsolutePath(), "pfx");
+		testDir.mkdir();
+		db = new KeezFileDb(testDir.getAbsolutePath(), "pfx", false);
 	}
 
 	@After
@@ -42,7 +43,23 @@ public class KeezFileDbTest {
 		if (!testDir.delete()) {
 			//throw new RuntimeException("failed to delete " + testDir);
 		}
-	}	
+	}
+	
+	@Test
+	public void if_enabled_should_create_dir() {
+		File baseDir = new File(System.getProperty("java.io.tmpdir"));
+		File tempDir = new File(baseDir, System.currentTimeMillis() + "temp-create");	
+		new KeezFileDb(tempDir.getAbsolutePath(), "pfx", true);
+		assertTrue(tempDir.exists());
+	}
+	
+	@Test 
+	public void if_not_enabled_should_not_create_dir() {
+		File baseDir = new File(System.getProperty("java.io.tmpdir"));
+		File tempDir = new File(baseDir, System.currentTimeMillis() + "temp-nocreate");	
+		new KeezFileDb(tempDir.getAbsolutePath(), "pfx", false);
+		assertFalse(tempDir.exists());
+	}
 
 	@Test
 	public void put_should_create_file_on_ok() {
@@ -432,11 +449,12 @@ public class KeezFileDbTest {
 		String baseName = System.currentTimeMillis() + "-";
 
 		for (int counter = 0; counter < TEMP_DIR_ATTEMPTS; counter++) {
-			File tempDir = new File(baseDir, baseName + counter);
+			File tempDir = new File(baseDir, baseName + counter);	
 			if (tempDir.mkdir()) {
 				return tempDir;
 			}
 		}
+		
 		throw new IllegalStateException("Failed to create directory within "
 				+ TEMP_DIR_ATTEMPTS + " attempts (tried " + baseName + "0 to "
 				+ baseName + (TEMP_DIR_ATTEMPTS - 1) + ')');
