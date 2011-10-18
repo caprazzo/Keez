@@ -18,6 +18,8 @@ import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -32,12 +34,15 @@ import com.google.common.collect.Iterables;
  */
 public class KeezFileDb implements Keez.Db {
 
+	private Logger logger = LoggerFactory.getLogger(KeezFileDb.class);
+	
 	// global lock, defintely too broad
 	// could use a more fine grained lock based on the
 	// directory or on the file itself
 	private final static Object lock = new Object();
 	private final File directory;
 	private final String prefix;
+	private boolean autoPurge;
 
 	public KeezFileDb(String directory, String prefix) {
 		if (!isValidKey(prefix)) {
@@ -82,6 +87,10 @@ public class KeezFileDb implements Keez.Db {
 				FileOutputStream writer = new FileOutputStream(newFile);
 				writer.write(data);
 				writer.close();
+				
+				if (autoPurge) {
+					purgeOldRevisions(key, foundRev);
+				}
 
 				callback.ok(key, foundRev);
 			} catch (Exception e) {
@@ -89,6 +98,19 @@ public class KeezFileDb implements Keez.Db {
 			}
 		}
 	}	
+
+	private void purgeOldRevisions(String key, int foundRev) {
+		File[] keyFiles = findKeyFile(key);
+		for(File file : keyFiles) {
+			int revision = getRevision(file);
+			if (revision < foundRev) {
+				boolean deleted = file.delete();
+				if (!deleted) {
+					logger.error("could not delete file " + file);
+				}
+			}
+		}		
+	}
 
 	private void create(String key, byte[] data, Put callback) {
 		
@@ -221,7 +243,7 @@ public class KeezFileDb implements Keez.Db {
 	}
 
 	/**
-	 * Find all files for a specific key
+	 * Find all files for a specific key and return them sorted by revision number ascending
 	 * 
 	 * @param dir
 	 * @param key
@@ -288,6 +310,10 @@ public class KeezFileDb implements Keez.Db {
 
 	private boolean isValidKey(String key) {
 		 return key.matches("[A-Za-z0-9]+");
+	}
+
+	public void setAutoPurge(boolean autoPurge) {
+		this.autoPurge = autoPurge;
 	}
 
 	

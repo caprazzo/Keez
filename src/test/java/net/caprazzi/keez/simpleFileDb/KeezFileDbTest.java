@@ -70,6 +70,22 @@ public class KeezFileDbTest {
 	}
 	
 	@Test
+	public void if_db_has_purge_on_should_remove_old_revisions() {
+		db.setAutoPurge(true);
+		db.put("key", 0, data, PutNoop);
+		assertTrue(findFile(testDir, "pfx-key.1"));
+		
+		db.put("key", 1, data, PutNoop);
+		assertFalse(findFile(testDir, "pfx-key.1"));
+		assertTrue(findFile(testDir, "pfx-key.2"));
+		
+		db.put("key", 2, data, PutNoop);
+		assertFalse(findFile(testDir, "pfx-key.1"));
+		assertFalse(findFile(testDir, "pfx-key.2"));
+		assertTrue(findFile(testDir, "pfx-key.3"));
+	}
+	
+	@Test
 	public void put_should_increase_revision_at_each_update() {
 		db.put("key", 0, data, new PutTestHelp() {
 			@Override
