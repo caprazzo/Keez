@@ -5,7 +5,7 @@
 
 	<groupId>net.caprazzi.keez</groupId>
 	<artifactId>Keez</artifactId>
-	<version>0.5</version>
+	<version>0.6</version>
 
 	<name>Keez</name>
 	<description>Simple Embeddable Key-Value Store</description>
