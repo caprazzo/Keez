@@ -38,7 +38,7 @@ public class KeezFileDb implements Keez.Db {
 	
 	// global lock, defintely too broad
 	// could use a more fine grained lock based on the
-	// directory or on the file itself
+	// directory or on each file
 	private final static Object lock = new Object();
 	private final File directory;
 	private final String prefix;
@@ -58,7 +58,6 @@ public class KeezFileDb implements Keez.Db {
 	@Override
 	public void put(String key, int rev, byte[] data, Put callback) {
 		
-		System.out.println("PUTTING " + new String(data));
 		if (rev == 0) {
 			create(key, data, callback);
 			return;

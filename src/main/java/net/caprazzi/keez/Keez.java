@@ -155,9 +155,7 @@ public class Keez {
 		 * @param e
 		 *            underlying exception
 		 */
-		public void error(String key, Exception e) {
-			logger.warn("Exception while deleting key " + key, e);
-		};
+		public abstract void error(String key, Exception e);
 
 	}
 	
@@ -194,6 +192,12 @@ public class Keez {
 
 		public int getRevision() {
 			return revision;
+		}
+		
+		@Override
+		public String toString() {
+			// TODO Auto-generated method stub
+			return super.toString() + "::" + key + "@" + revision;
 		}
 		
 	}

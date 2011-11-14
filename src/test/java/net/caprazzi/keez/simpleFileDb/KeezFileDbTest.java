@@ -1,6 +1,9 @@
 package net.caprazzi.keez.simpleFileDb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -12,7 +15,6 @@ import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
-import net.caprazzi.keez.simpleFileDb.KeezFileDb;
 
 import org.junit.After;
 import org.junit.Before;
@@ -20,7 +22,6 @@ import org.junit.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 public class KeezFileDbTest {
 
@@ -262,6 +263,9 @@ public class KeezFileDbTest {
 				assertEquals("somekey", key);
 				flag = true;
 			}
+			@Override
+			public void error(String key, Exception e) {
+			}
 		});
 		assertTrue(flag);
 	}
@@ -469,6 +473,7 @@ public class KeezFileDbTest {
 	private static final Delete DeleteNoop = new Delete() {
 		@Override public void deleted(String key, byte[] data) {}
 		@Override public void notFound(String key) {}
+		@Override public void error(String key, Exception e) {}
 	};
 	
 	public static class PutTestHelp extends Put {

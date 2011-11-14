@@ -135,6 +135,12 @@ public class Example {
 
 			@Override
 			public void notFound(String key) {}
+
+			@Override
+			public void error(String key, Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 			
 		});
 		
@@ -148,6 +154,12 @@ public class Example {
 			
 			@Override
 			public void deleted(String key, byte[] data) {}
+
+			@Override
+			public void error(String key, Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 			
 		});		
 	
