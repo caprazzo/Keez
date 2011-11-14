@@ -57,7 +57,7 @@ public class KeezFileDb implements Keez.Db {
 
 	@Override
 	public void put(String key, int rev, byte[] data, Put callback) {
-		
+
 		if (rev == 0) {
 			create(key, data, callback);
 			return;
