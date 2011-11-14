@@ -57,8 +57,6 @@ public class KeezFileDb implements Keez.Db {
 
 	@Override
 	public void put(String key, int rev, byte[] data, Put callback) {
-		
-		System.out.println("PUTTING " + new String(data));
 		if (rev == 0) {
 			create(key, data, callback);
 			return;
