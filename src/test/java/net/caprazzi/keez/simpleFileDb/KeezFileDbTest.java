@@ -295,7 +295,7 @@ public class KeezFileDbTest {
 		db.put("key", 1, "newData".getBytes(), PutNoop);
 		db.put("key", 2, "latestData".getBytes(), PutNoop);
 		
-		db.delete("key", new DeleteTestHelp() {
+		db.delete("key", new KeezTest.DeleteTestHelp() {
 			@Override
 			public void deleted(String key, byte[] data) {
 				assertTrue(Arrays.equals("latestData".getBytes(), data));
@@ -307,7 +307,7 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void list_should_find_no_entries_if_empty() {
-		db.list(new ListTestHelp() {
+		db.list(new KeezTest.ListTestHelp() {
 			@Override
 			public void entries(Iterable<Entry> entries) {
 				assertFalse(entries.iterator().hasNext());
@@ -323,7 +323,7 @@ public class KeezFileDbTest {
 		db.put("key1", 0, moredata, PutNoop);
 		db.put("key2", 0, betterdata, PutNoop);
 		
-		db.list(new ListTestHelp() {
+		db.list(new KeezTest.ListTestHelp() {
 			@Override
 			public void entries(Iterable<Entry> entries) {
 				Entry[] array = Iterables.toArray(entries, Entry.class);
@@ -369,7 +369,7 @@ public class KeezFileDbTest {
 		db.put("key2", 0, betterdata, PutNoop);
 		db.put("key2", 1, betterdata, PutNoop);
 		
-		db.list(new ListTestHelp() {
+		db.list(new KeezTest.ListTestHelp() {
 			@Override
 			public void entries(Iterable<Entry> entries) {
 				Entry[] array = Iterables.toArray(entries, Entry.class);
@@ -428,7 +428,7 @@ public class KeezFileDbTest {
 		assertTrue(flag);
 		
 		flag = false;
-		db.delete("/", new DeleteTestHelp() {
+		db.delete("/", new KeezTest.DeleteTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
 				flag = true;
@@ -477,37 +477,5 @@ public class KeezFileDbTest {
 		@Override public void notFound(String key) {}
 		@Override public void error(String key, Exception e) {}
 	};
-	
-
-	
-	public static class DeleteTestHelp extends Delete {
-
-		@Override
-		public void deleted(String key, byte[] data) {
-			throw new RuntimeException("unexpected delete success");
-		}
-
-		@Override
-		public void notFound(String key) {
-			throw new RuntimeException("unexpected not found");			
-		}
-		
-		@Override
-		public void error(String key, Exception e) {
-			throw new RuntimeException("unexpected error", e);
-		}		
-	}
-	
-	public static class ListTestHelp extends List {
-		@Override
-		public void entries(Iterable<Entry> entries) {
-			throw new RuntimeException("unexpected entries call");
-		}
-
-		@Override
-		public void error(Exception ex) {
-			throw new RuntimeException("unexpected error call");			
-		}
-	}
 	
 }

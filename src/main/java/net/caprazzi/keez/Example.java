@@ -92,7 +92,6 @@ public class Example {
 			@Override
 			public void error(String key, Exception e) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
 		
@@ -107,6 +106,12 @@ public class Example {
 
 			@Override
 			public void error(Exception ex) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void notFound() {
 				// TODO Auto-generated method stub
 				
 			}

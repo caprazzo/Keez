@@ -1,11 +1,14 @@
 package net.caprazzi.keez.inmemory;
 
+import java.util.Set;
 import java.util.SortedSet;
 
 import net.caprazzi.keez.Keez;
+import net.caprazzi.keez.Keez.Callback;
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.GetRevisions;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 
@@ -28,7 +31,7 @@ public class KeezInMemory implements Keez.Db {
 	
 	@Override
 	public void setAutoPurge(boolean autoPurge) {
-		this.autoPurge = true;
+		this.autoPurge = autoPurge;
 	}
 	
 	@Override
@@ -48,7 +51,7 @@ public class KeezInMemory implements Keez.Db {
 			int lastRevision = getRevision(revisions);
 			
 			if (rev != lastRevision) {
-				callback.collision(key, rev, lastRevision);
+				collision(callback, key, rev, lastRevision);
 				return;
 			}
 			
@@ -60,8 +63,7 @@ public class KeezInMemory implements Keez.Db {
 				purgeOldRevisions(key, newRevision);
 			}
 		
-			callback.ok(key, newRevision);
-			
+			ok(callback, key, newRevision);
 		}
 		catch (Exception e) {
 			callback.error(key, e);
@@ -74,12 +76,14 @@ public class KeezInMemory implements Keez.Db {
 		try {
 			SortedSet<Value> revisions = data.get(key);
 			if (revisions.size() == 0) {
-				callback.notFound(key);
+				notFound(callback, key);
 				return;
 			}
 			
 			Value value = revisions.last();
-			callback.found(key, value.rev, value.body);
+			int revision = value.rev;
+			byte[] body = value.body;
+			found(callback, key, revision, body);			
 		}
 		catch (Exception e) {
 			callback.error(key, e);
@@ -91,23 +95,28 @@ public class KeezInMemory implements Keez.Db {
 		try {
 			SortedSet<Value> revisions = data.get(key);
 			if (revisions.size() == 0) {
-				callback.notFound(key);
+				notFound(callback, key);
 				return;
 			}
 			
 			Value value = revisions.last();
 			data.removeAll(key);
-			callback.deleted(key, value.body);
+			deleted(callback, key, value.body);
 		}
 		catch (Exception e) {
 			callback.error(key, e);
 		}
 	}
-
+	
 	@Override
 	public void list(List callback) {
 		try {
-			callback.entries(Iterables.transform(data.keySet(), new Function<String, Entry>() {
+			Set<String> keys = data.keySet();
+			if (keys.size() == 0) {
+				notFound(callback);
+				return;
+			}
+			entries(callback, Iterables.transform(keys, new Function<String, Entry>() {
 				@Override
 				public Entry apply(String key) {
 					Value v = data.get(key).last();
@@ -118,6 +127,28 @@ public class KeezInMemory implements Keez.Db {
 		catch(Exception e) {
 			callback.error(e);
 		}
+	}
+	
+	@Override
+	public void getRevisions(final String key, GetRevisions callback) {
+		try {
+			SortedSet<Value> revisions = data.get(key);
+			if (revisions.size() == 0) {
+				notFound(callback, key);
+				return;
+			}
+			
+			found(callback, key, Iterables.transform(revisions, new Function<Value, Entry>() {
+				@Override
+				public Entry apply(Value value) {
+					return new Entry(key, value.rev, value.body);
+				}
+			}));
+		}
+		catch(Exception e) {
+			callback.error(key, e);
+		}
+		
 	}
 
 	private void purgeOldRevisions(String key, int newRevision) {
@@ -130,15 +161,138 @@ public class KeezInMemory implements Keez.Db {
 		SortedSet<Value> revisions = data.get(key);
 		if (revisions.size() > 0) {
 			int foundRev = getRevision(revisions);
-			callback.collision(key, 0, foundRev);
+			collision(callback, key, 0, foundRev);
 			return;
 		}
 		
 		Value v = new Value(1, body);
 		data.put(key, v);
-		callback.ok(key, v.rev);		
+		int revision = v.rev;
+		
+		ok(callback, key, revision);		
 	}
 	
+	private void ok(Put callback, String key, int revision) {
+		try {
+			callback.ok(key, revision);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+	
+	private void applicationError(Callback callback, Exception ex) {
+		try {
+			callback.applicationError(ex);
+		}
+		catch (Exception e) {
+			// TODO: log this
+			e.printStackTrace();
+		}
+	}
+
+	private void collision(Put callback, String key, int yourRev, int foundRev) {
+		try {
+			callback.collision(key, yourRev, foundRev);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+		
+	}
+	
+	private void found(Get callback, String key, int revision, byte[] body) {
+		try {
+			callback.found(key, revision, body);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+	
+	private void notFound(Get callback, String key) {
+		try {
+			callback.notFound(key);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+	
+	private void deleted(Delete callback, String key, byte[] body) {
+		try {
+			callback.deleted(key, body);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+
+	private void notFound(Delete callback, String key) {
+		try {
+			callback.notFound(key);
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+	
+	private void entries(List callback, Iterable<Entry> entries) {
+		try {
+			callback.entries(entries);
+		}
+		catch (Exception e) {
+			try {
+				callback.applicationError(e);
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+
+	private void notFound(List callback) {
+		try {
+			callback.notFound();
+		}
+		catch (Exception e) {
+			try {
+				callback.applicationError(e);
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+	
+	private void found(GetRevisions callback, String key, Iterable<Entry> entries) {
+		try {
+			callback.found(key, entries);
+		}
+		catch (Exception e) {
+			try {
+				callback.applicationError(e);
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+
+	private void notFound(GetRevisions callback, String key) {
+		try {
+			callback.notFound(key);
+		}
+		catch (Exception e) {
+			try {
+				callback.applicationError(e);
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}	
+
 	private int getRevision(SortedSet<Value> revisions) {
 		return revisions.last().rev;		
 	}

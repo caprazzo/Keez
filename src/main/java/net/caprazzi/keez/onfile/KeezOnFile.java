@@ -10,10 +10,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import net.caprazzi.keez.Keez;
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.GetRevisions;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 
@@ -257,7 +259,6 @@ public class KeezOnFile implements Keez.Db {
 			}
 		});
 		
-		
 		Arrays.sort(files, new Comparator<File>() {
 			@Override
 			public int compare(File fa, File fb) {
@@ -316,6 +317,39 @@ public class KeezOnFile implements Keez.Db {
 	@Override
 	public void setAutoPurge(boolean autoPurge) {
 		this.autoPurge = autoPurge;
+	}
+
+	@Override
+	public void getRevisions(final String key, GetRevisions callback) {
+		try {
+			File[] keyFiles = findKeyFile(key);
+			if (keyFiles.length == 0) {
+				callback.notFound(key);
+				return;
+			}
+			
+			Iterable<Keez.Entry> entries = Iterables.transform(Arrays.asList(keyFiles), new Function<File, Keez.Entry>() {
+				@Override
+				public Keez.Entry apply(File file) {
+					int rev = getRevision(file);
+					try {
+						FileInputStream in = new FileInputStream(file);
+						byte[] data = IOUtils.toByteArray(in);
+						in.close();
+						return new Keez.Entry(key, rev, data);
+					} catch (FileNotFoundException e) {
+						throw new RuntimeException(e);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}				
+			});
+			
+			callback.found(key, entries);
+		}
+		catch (Exception ex) {
+			callback.error(key, ex);
+		}
 	}
 
 }

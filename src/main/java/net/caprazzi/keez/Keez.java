@@ -46,17 +46,33 @@ public class Keez {
 		public void put(String key, int rev, byte[] body, Put callback);
 
 		/**
-		 * Get value.
-		 * The latest revision of a key is always returned.
+		 * Get last revision of a key.
 		 * 
-		 * callback.found is invoked if the key is found
-		 * callback.notFound is invoked if the key is not found
-		 * callback.error is invoked on any other error
+		 * Invokes callback.found if the key is found
+		 * Invokes callback.notFound if the key is not found
+		 * Invokes callback.error on any other error.
+		 * 
+		 * Implementations should never throw exceptions, but call callback.error
 		 * 
 		 * @param key
 		 * @param callback
 		 */
 		public void get(String key, Get callback);
+		
+		/**
+		 * Get all revisions of a key. If autoPurge is enabled, this will
+		 * always only return the last revision.
+		 * 
+		 * Invokes callback.found if the key is found
+		 * Invokes callback.notFound if the key is not found
+		 * Invokes callback.error on any other error.
+		 * 
+		 * Implementations should never throw exceptions, but call callback.error
+		 * 
+		 * @param key
+		 * @param callback
+		 */
+		public void getRevisions(String key, GetRevisions callback);
 
 		/**
 		 * Delete a key. Deletes all revisions.
@@ -77,8 +93,14 @@ public class Keez {
 		public void list(List callback);
 
 	}
+	
+	public static abstract class Callback {
+		public void applicationError(Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 
-	public static abstract class Get {
+	public static abstract class Get extends Callback {
 		/**
 		 * Invoked on Get success
 		 * 
@@ -103,8 +125,31 @@ public class Keez {
 		 */
 		public abstract void error(String key, Exception e);
 	}
+	
+	public static abstract class GetRevisions extends Callback {
+		/** 
+		 * Invoked on GetRevisions success
+		 * @param key
+		 * @param revisions
+		 */
+		public abstract void found(String key, Iterable<Entry> revisions);
+		
+		/**
+		 * Invoked when key is not found
+		 * 
+		 * @param key
+		 */
+		public abstract void notFound(String key);
+		
+		/**
+		 * Invoked on errors but not on "not found"
+		 * @param key
+		 * @param e
+		 */
+		public abstract void error(String key, Exception e);
+	}
 
-	public static abstract class Put {
+	public static abstract class Put extends Callback  {
 		/**
 		 * Invoked when put completed succesfully
 		 * 
@@ -134,7 +179,7 @@ public class Keez {
 
 	}
 
-	public static abstract class Delete {
+	public static abstract class Delete extends Callback {
 
 		/**
 		 * Invoked when delete completed succesfully
@@ -163,9 +208,11 @@ public class Keez {
 
 	}
 	
-	public static abstract class List {
+	public static abstract class List extends Callback  {
 
 		public abstract void entries(Iterable<Entry> entries);
+		
+		public abstract void notFound();
 
 		public abstract void error(Exception ex);
 	}

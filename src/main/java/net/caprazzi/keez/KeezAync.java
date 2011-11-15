@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import net.caprazzi.keez.Keez.Db;
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Get;
+import net.caprazzi.keez.Keez.GetRevisions;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 
@@ -134,6 +135,12 @@ public class KeezAync implements Db {
 
 	@Override
 	public void setAutoPurge(boolean autoPurge) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void getRevisions(String key, GetRevisions callback) {
 		// TODO Auto-generated method stub
 		
 	}
