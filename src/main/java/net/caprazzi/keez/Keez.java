@@ -1,7 +1,5 @@
 package net.caprazzi.keez;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Simple embedded key-value store API.
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class Keez {
-
-	private static Logger logger = LoggerFactory.getLogger("Keez");
 
 	public interface Db {
 				
@@ -163,11 +159,7 @@ public class Keez {
 
 		public abstract void entries(Iterable<Entry> entries);
 
-		public void error(Exception ex) {
-			// TODO Auto-generated method stub
-			
-		}
-		
+		public abstract void error(Exception ex);
 	}
 	
 	public static class Entry {

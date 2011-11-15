@@ -103,6 +103,12 @@ public class Example {
 					System.out.println("Found " + e.getKey() + "@" + e.getRevision() + ": " + new String(e.getData()));
 				}
 			}
+
+			@Override
+			public void error(Exception ex) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 		
 		// get a collision

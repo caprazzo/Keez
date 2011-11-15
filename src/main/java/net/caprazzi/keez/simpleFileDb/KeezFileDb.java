@@ -75,26 +75,25 @@ public class KeezFileDb implements Keez.Db {
 					callback.collision(key, rev, -1);
 					return;
 				}
-				else {					
-					int foundRev = getRevision(keyFiles[keyFiles.length-1]);
-					if (foundRev != rev) {
-						callback.collision(key, rev, foundRev);
-						return;
-					}
+				
+				int lastRev = getRevision(keyFiles[keyFiles.length-1]);
+				if (lastRev != rev) {
+					callback.collision(key, rev, lastRev);
+					return;
 				}
 				
-				int foundRev = rev + 1;
+				int newRev = lastRev + 1;
 												
-				File newFile = new File(filePath(key, foundRev));
+				File newFile = new File(filePath(key, newRev));
 				FileOutputStream writer = new FileOutputStream(newFile);
 				writer.write(data);
 				writer.close();
 				
 				if (autoPurge) {
-					purgeOldRevisions(key, foundRev);
+					purgeOldRevisions(key, newRev);
 				}
 
-				callback.ok(key, foundRev);
+				callback.ok(key, newRev);
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
