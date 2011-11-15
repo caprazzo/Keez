@@ -6,6 +6,7 @@ import static net.caprazzi.keez.Helpers.entries;
 import static net.caprazzi.keez.Helpers.found;
 import static net.caprazzi.keez.Helpers.notFound;
 import static net.caprazzi.keez.Helpers.ok;
+import static net.caprazzi.keez.Helpers.notNull;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -23,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
+import com.sun.istack.internal.NotNull;
 
 public class KeezInMemory implements Keez.Db {
 
@@ -42,7 +44,12 @@ public class KeezInMemory implements Keez.Db {
 	
 	@Override
 	public void put(String key, int rev, byte[] body, Put callback) {
+		notNull(key);
+		notNull(body);
+		notNull(callback);
+		
 		try {
+			
 			if (rev == 0) {
 				create(key, body, callback);
 				return;
@@ -79,6 +86,9 @@ public class KeezInMemory implements Keez.Db {
 	
 	@Override
 	public void get(String key, Get callback) {
+		notNull(key);
+		notNull(callback);
+		
 		try {
 			SortedSet<Value> revisions = data.get(key);
 			if (revisions.size() == 0) {
@@ -98,6 +108,9 @@ public class KeezInMemory implements Keez.Db {
 
 	@Override
 	public void delete(String key, Delete callback) {
+		notNull(key);
+		notNull(callback);
+		
 		try {
 			SortedSet<Value> revisions = data.get(key);
 			if (revisions.size() == 0) {
@@ -116,6 +129,8 @@ public class KeezInMemory implements Keez.Db {
 	
 	@Override
 	public void list(List callback) {
+		notNull(callback);
+		
 		try {
 			Set<String> keys = data.keySet();
 			if (keys.size() == 0) {
@@ -137,6 +152,9 @@ public class KeezInMemory implements Keez.Db {
 	
 	@Override
 	public void getRevisions(final String key, GetRevisions callback) {
+		notNull(key);
+		notNull(callback);
+		
 		try {
 			SortedSet<Value> revisions = data.get(key);
 			if (revisions.size() == 0) {

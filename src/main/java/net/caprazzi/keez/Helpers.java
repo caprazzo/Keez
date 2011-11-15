@@ -111,4 +111,9 @@ public class Helpers {
 		}
 	}	
 	
+	public static final void notNull(Object o) {
+		if (o == null)
+			throw new NullPointerException();
+	}
+	
 }

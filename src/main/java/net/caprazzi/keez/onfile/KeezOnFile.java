@@ -24,6 +24,7 @@ import static net.caprazzi.keez.Helpers.entries;
 import static net.caprazzi.keez.Helpers.found;
 import static net.caprazzi.keez.Helpers.notFound;
 import static net.caprazzi.keez.Helpers.ok;
+import static net.caprazzi.keez.Helpers.notNull;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -62,10 +63,18 @@ public class KeezOnFile implements Keez.Db {
 		}
 		this.prefix = prefix;
 	}
+	
+	@Override
+	public void setAutoPurge(boolean autoPurge) {
+		this.autoPurge = autoPurge;
+	}
 
 	@Override
 	public void put(String key, int rev, byte[] data, Put callback) {
-
+		notNull(key);
+		notNull(data);
+		notNull(callback);
+	
 		if (rev == 0) {
 			create(key, data, callback);
 			return;
@@ -154,6 +163,8 @@ public class KeezOnFile implements Keez.Db {
 
 	@Override
 	public void get(String key, Get callback) {
+		notNull(key);
+		notNull(callback);
 		
 		if (!isValidKey(key)) {
 			callback.error(key, new RuntimeException("invalid character in key ["+key+"]"));
@@ -184,6 +195,8 @@ public class KeezOnFile implements Keez.Db {
 
 	@Override
 	public void delete(String key, Delete callback) {
+		notNull(key);
+		notNull(callback);
 		
 		if (!isValidKey(key)) {
 			callback.error(key, new RuntimeException("invalid character in key ["+key+"]"));
@@ -222,6 +235,8 @@ public class KeezOnFile implements Keez.Db {
 	
 	@Override
 	public void list(final List callback) {
+		notNull(callback);
+		
 		HashMap<String, Integer> keys = findLatestRevisions();
 		if (keys.size() == 0) {
 			notFound(callback);
@@ -249,6 +264,43 @@ public class KeezOnFile implements Keez.Db {
 			callback.error(e);
 		}
 	}
+	
+	@Override
+	public void getRevisions(final String key, GetRevisions callback) {
+		notNull(key);
+		notNull(callback);
+		
+		try {
+			File[] keyFiles = findKeyFile(key);
+			if (keyFiles.length == 0) {
+				notFound(callback, key);
+				return;
+			}
+			
+			Iterable<Keez.Entry> entries = Iterables.transform(Arrays.asList(keyFiles), new Function<File, Keez.Entry>() {
+				@Override
+				public Keez.Entry apply(File file) {
+					int rev = getRevision(file);
+					try {
+						FileInputStream in = new FileInputStream(file);
+						byte[] data = IOUtils.toByteArray(in);
+						in.close();
+						return new Keez.Entry(key, rev, data);
+					} catch (FileNotFoundException e) {
+						throw new RuntimeException(e);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}				
+			});
+			
+			found(callback, key, entries);
+		}
+		catch (Exception ex) {
+			callback.error(key, ex);
+		}
+	}
+
 	
 	private int getRevision(File file) {
 		String[] parts = file.getAbsolutePath().split("\\.");
@@ -322,44 +374,6 @@ public class KeezOnFile implements Keez.Db {
 
 	private boolean isValidKey(String key) {
 		 return key.matches("[A-Za-z0-9]+");
-	}
-
-	@Override
-	public void setAutoPurge(boolean autoPurge) {
-		this.autoPurge = autoPurge;
-	}
-
-	@Override
-	public void getRevisions(final String key, GetRevisions callback) {
-		try {
-			File[] keyFiles = findKeyFile(key);
-			if (keyFiles.length == 0) {
-				notFound(callback, key);
-				return;
-			}
-			
-			Iterable<Keez.Entry> entries = Iterables.transform(Arrays.asList(keyFiles), new Function<File, Keez.Entry>() {
-				@Override
-				public Keez.Entry apply(File file) {
-					int rev = getRevision(file);
-					try {
-						FileInputStream in = new FileInputStream(file);
-						byte[] data = IOUtils.toByteArray(in);
-						in.close();
-						return new Keez.Entry(key, rev, data);
-					} catch (FileNotFoundException e) {
-						throw new RuntimeException(e);
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}				
-			});
-			
-			found(callback, key, entries);
-		}
-		catch (Exception ex) {
-			callback.error(key, ex);
-		}
 	}
 
 }

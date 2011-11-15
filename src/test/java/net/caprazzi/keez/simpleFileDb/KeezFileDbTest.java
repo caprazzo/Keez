@@ -12,8 +12,6 @@ import java.util.Arrays;
 
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Entry;
-import net.caprazzi.keez.Keez.Get;
-import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 import net.caprazzi.keez.KeezTest;
 import net.caprazzi.keez.onfile.KeezOnFile;

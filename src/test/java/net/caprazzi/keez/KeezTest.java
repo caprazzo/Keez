@@ -36,20 +36,17 @@ public abstract class KeezTest {
 	}
 
 	@Test public void put_should_put_and_get_key() {
-		db.put("foo", 0, "data".getBytes(), new PutTestHelp() {
+		db.put("foo", 0, "data".getBytes(), PutOk);
+		db.get("foo", new GetTestHelp() {
 			@Override
-			public void ok(String key, int revision) {
-				db.get("foo", new GetTestHelp() {
-					@Override
-					public void found(String key, int rev, byte[] data) {
-						assertEquals("foo", key);
-						assertEquals(1, rev);
-						assertEquals("data", new String(data));
-						called = true;
-					}
-				});
+			public void found(String key, int rev, byte[] data) {
+				assertEquals("foo", key);
+				assertEquals(1, rev);
+				assertEquals("data", new String(data));
+				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -63,6 +60,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -77,6 +75,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -92,6 +91,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -107,6 +107,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -121,6 +122,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -139,6 +141,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -157,6 +160,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -283,6 +287,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -300,6 +305,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -311,6 +317,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -379,6 +386,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -396,6 +404,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -424,6 +433,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -445,6 +455,8 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
+		assertTrue(called);
 	}
 	
 	@Test public void get_revisions_should_bounce_exceptions_thrown_in_found() {
@@ -503,7 +515,15 @@ public abstract class KeezTest {
 	}
 	
 	@Test public void get_revisions_should_bounce_exceptions_thrown_in_error() {
-		// TODO: find a way to force error() in db
+		db.getRevisions("xxxx", new GetRevisionsTestHelp() {					
+			@Override
+			public void error(String key, Exception e) {
+				called = true;
+				throw new RuntimeException("Exception in error");
+			}
+		});
+		
+		assertTrue(called);
 	}	
 	
 	@Test public void delete_should_call_not_found_if_no_key() {
@@ -514,6 +534,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -527,6 +548,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -539,6 +561,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -553,6 +576,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -617,6 +641,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -641,6 +666,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
@@ -663,6 +689,7 @@ public abstract class KeezTest {
 				called = true;
 			}
 		});
+		
 		assertTrue(called);
 	}
 	
