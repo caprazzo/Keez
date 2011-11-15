@@ -1,10 +1,16 @@
 package net.caprazzi.keez.inmemory;
 
+import static net.caprazzi.keez.Helpers.collision;
+import static net.caprazzi.keez.Helpers.deleted;
+import static net.caprazzi.keez.Helpers.entries;
+import static net.caprazzi.keez.Helpers.found;
+import static net.caprazzi.keez.Helpers.notFound;
+import static net.caprazzi.keez.Helpers.ok;
+
 import java.util.Set;
 import java.util.SortedSet;
 
 import net.caprazzi.keez.Keez;
-import net.caprazzi.keez.Keez.Callback;
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
@@ -172,127 +178,6 @@ public class KeezInMemory implements Keez.Db {
 		ok(callback, key, revision);		
 	}
 	
-	private void ok(Put callback, String key, int revision) {
-		try {
-			callback.ok(key, revision);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-	}
-	
-	private void applicationError(Callback callback, Exception ex) {
-		try {
-			callback.applicationError(ex);
-		}
-		catch (Exception e) {
-			// TODO: log this
-			e.printStackTrace();
-		}
-	}
-
-	private void collision(Put callback, String key, int yourRev, int foundRev) {
-		try {
-			callback.collision(key, yourRev, foundRev);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-		
-	}
-	
-	private void found(Get callback, String key, int revision, byte[] body) {
-		try {
-			callback.found(key, revision, body);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-	}
-	
-	private void notFound(Get callback, String key) {
-		try {
-			callback.notFound(key);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-	}
-	
-	private void deleted(Delete callback, String key, byte[] body) {
-		try {
-			callback.deleted(key, body);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-	}
-
-	private void notFound(Delete callback, String key) {
-		try {
-			callback.notFound(key);
-		}
-		catch (Exception ex) {
-			applicationError(callback, ex);
-		}
-	}
-	
-	private void entries(List callback, Iterable<Entry> entries) {
-		try {
-			callback.entries(entries);
-		}
-		catch (Exception e) {
-			try {
-				callback.applicationError(e);
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-
-	private void notFound(List callback) {
-		try {
-			callback.notFound();
-		}
-		catch (Exception e) {
-			try {
-				callback.applicationError(e);
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-	
-	private void found(GetRevisions callback, String key, Iterable<Entry> entries) {
-		try {
-			callback.found(key, entries);
-		}
-		catch (Exception e) {
-			try {
-				callback.applicationError(e);
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-
-	private void notFound(GetRevisions callback, String key) {
-		try {
-			callback.notFound(key);
-		}
-		catch (Exception e) {
-			try {
-				callback.applicationError(e);
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}	
-
 	private int getRevision(SortedSet<Value> revisions) {
 		return revisions.last().rev;		
 	}

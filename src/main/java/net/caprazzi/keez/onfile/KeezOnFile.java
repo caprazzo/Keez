@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.TreeSet;
 
 import net.caprazzi.keez.Keez;
 import net.caprazzi.keez.Keez.Delete;
@@ -18,6 +17,13 @@ import net.caprazzi.keez.Keez.Get;
 import net.caprazzi.keez.Keez.GetRevisions;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
+
+import static net.caprazzi.keez.Helpers.collision;
+import static net.caprazzi.keez.Helpers.deleted;
+import static net.caprazzi.keez.Helpers.entries;
+import static net.caprazzi.keez.Helpers.found;
+import static net.caprazzi.keez.Helpers.notFound;
+import static net.caprazzi.keez.Helpers.ok;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -74,13 +80,13 @@ public class KeezOnFile implements Keez.Db {
 			try {
 				File[] keyFiles = findKeyFile(key);
 				if (keyFiles.length == 0) {
-					callback.collision(key, rev, -1);
+					collision(callback, key, rev, -1);
 					return;
 				}
 				
 				int lastRev = getRevision(keyFiles[keyFiles.length-1]);
 				if (lastRev != rev) {
-					callback.collision(key, rev, lastRev);
+					collision(callback, key, rev, lastRev);
 					return;
 				}
 				
@@ -95,7 +101,7 @@ public class KeezOnFile implements Keez.Db {
 					purgeOldRevisions(key, newRev);
 				}
 
-				callback.ok(key, newRev);
+				ok(callback, key, newRev);
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
@@ -128,7 +134,7 @@ public class KeezOnFile implements Keez.Db {
 				
 				if (keyFiles.length > 0) {
 					int foundRev = getRevision(keyFiles[keyFiles.length-1]);
-					callback.collision(key, 0, foundRev);
+					collision(callback, key, 0, foundRev);
 					return;
 				}
 				
@@ -139,7 +145,7 @@ public class KeezOnFile implements Keez.Db {
 				writer.write(data);
 				writer.close();
 
-				callback.ok(key, foundRev);				
+				ok(callback, key, foundRev);				
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
@@ -157,7 +163,7 @@ public class KeezOnFile implements Keez.Db {
 		synchronized (lock) {
 			File[] keyFiles = findKeyFile(key);
 			if (keyFiles.length == 0) {
-				callback.notFound(key);
+				notFound(callback, key);
 				return;
 			}
 			int foundRev = getRevision(keyFiles[keyFiles.length-1]);
@@ -167,9 +173,9 @@ public class KeezOnFile implements Keez.Db {
 				FileInputStream in = new FileInputStream(f);
 				byte[] data = IOUtils.toByteArray(in);
 				in.close();
-				callback.found(key, foundRev, data);
+				found(callback, key, foundRev, data);
 			} catch (FileNotFoundException ex) {
-				callback.notFound(key);
+				notFound(callback, key);
 			} catch (Exception e) {
 				callback.error(key, e);
 			}
@@ -187,7 +193,7 @@ public class KeezOnFile implements Keez.Db {
 		synchronized (lock) {
 			File[] keyFiles = findKeyFile(key);
 			if (keyFiles.length == 0) {
-				callback.notFound(key);
+				notFound(callback, key);
 				return;
 			}
 			int foundRev = getRevision(keyFiles[keyFiles.length-1]);
@@ -205,9 +211,9 @@ public class KeezOnFile implements Keez.Db {
 						return;
 					}
 				}
-				callback.deleted(key, data);
+				deleted(callback, key, data);
 			} catch (FileNotFoundException ex) {
-				callback.notFound(key);
+				notFound(callback, key);
 			} catch (IOException e) {
 				callback.error(key, e);
 			}
@@ -217,6 +223,10 @@ public class KeezOnFile implements Keez.Db {
 	@Override
 	public void list(final List callback) {
 		HashMap<String, Integer> keys = findLatestRevisions();
+		if (keys.size() == 0) {
+			notFound(callback);
+			return;			
+		}
 		try {
 			Iterable<net.caprazzi.keez.Keez.Entry> entries = Iterables.transform(keys.entrySet(), new Function<Entry<String, Integer>, Keez.Entry>() {
 				@Override
@@ -233,7 +243,7 @@ public class KeezOnFile implements Keez.Db {
 					} 			
 				}
 			});
-			callback.entries(entries);
+			entries(callback, entries);
 		}
 		catch (Exception e) {
 			callback.error(e);
@@ -324,7 +334,7 @@ public class KeezOnFile implements Keez.Db {
 		try {
 			File[] keyFiles = findKeyFile(key);
 			if (keyFiles.length == 0) {
-				callback.notFound(key);
+				notFound(callback, key);
 				return;
 			}
 			
@@ -345,7 +355,7 @@ public class KeezOnFile implements Keez.Db {
 				}				
 			});
 			
-			callback.found(key, entries);
+			found(callback, key, entries);
 		}
 		catch (Exception ex) {
 			callback.error(key, ex);
