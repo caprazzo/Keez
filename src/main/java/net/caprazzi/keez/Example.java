@@ -5,13 +5,14 @@ import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
-import net.caprazzi.keez.simpleFileDb.KeezFileDb;
+import net.caprazzi.keez.onfile.KeezOnFile;
 
 public class Example {
 		
 	public static void main(String[] args) {
 		
-		Keez.Db db = new KeezFileDb(".", "kz", false);		
+		//Keez.Db db = new InMemoryKeez();		
+		Keez.Db db = new KeezOnFile(".", "kz", false);
 		
 		// try get an key that does not exist		
 		db.get("somekey", new Get() {
@@ -24,7 +25,7 @@ public class Example {
 
 			@Override
 			public void error(String key, Exception e) {
-				System.out.println("error while creating " + key);
+				System.out.println("error while getting " + key);
 				e.printStackTrace();
 			}
 			

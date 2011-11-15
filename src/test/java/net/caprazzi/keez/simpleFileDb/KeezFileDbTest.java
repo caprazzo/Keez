@@ -15,6 +15,8 @@ import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
+import net.caprazzi.keez.KeezTest;
+import net.caprazzi.keez.onfile.KeezOnFile;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +28,7 @@ import com.google.common.collect.Iterables;
 public class KeezFileDbTest {
 
 	File testDir;
-	private KeezFileDb db;
+	private KeezOnFile db;
 	private byte[] data = new byte[] { 'a','b','c' };
 	private byte[] moredata = new byte[] { 'a','b','c', 'd' };
 	private byte[] betterdata = new byte[] { 'a','b','c', 'd', 'e' };
@@ -35,7 +37,7 @@ public class KeezFileDbTest {
 	public void setUp() {
 		testDir = createTempDir();
 		testDir.mkdir();
-		db = new KeezFileDb(testDir.getAbsolutePath(), "pfx", false);
+		db = new KeezOnFile(testDir.getAbsolutePath(), "pfx", false);
 	}
 
 	@After
@@ -50,7 +52,7 @@ public class KeezFileDbTest {
 	public void if_enabled_should_create_dir() {
 		File baseDir = new File(System.getProperty("java.io.tmpdir"));
 		File tempDir = new File(baseDir, System.currentTimeMillis() + "temp-create");	
-		new KeezFileDb(tempDir.getAbsolutePath(), "pfx", true);
+		new KeezOnFile(tempDir.getAbsolutePath(), "pfx", true);
 		assertTrue(tempDir.exists());
 	}
 	
@@ -58,13 +60,13 @@ public class KeezFileDbTest {
 	public void if_not_enabled_should_not_create_dir() {
 		File baseDir = new File(System.getProperty("java.io.tmpdir"));
 		File tempDir = new File(baseDir, System.currentTimeMillis() + "temp-nocreate");	
-		new KeezFileDb(tempDir.getAbsolutePath(), "pfx", false);
+		new KeezOnFile(tempDir.getAbsolutePath(), "pfx", false);
 		assertFalse(tempDir.exists());
 	}
 
 	@Test
 	public void put_should_create_file_on_ok() {
-		db.put("newKey", 0, data, new PutTestHelp() {			
+		db.put("newKey", 0, data, new KeezTest.PutTestHelp() {			
 			public void ok(String key, int revision) {
 				assertEquals("newKey", key);
 				assertEquals(1, revision);
@@ -105,7 +107,7 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void put_should_increase_revision_at_each_update() {
-		db.put("key", 0, data, new PutTestHelp() {
+		db.put("key", 0, data, new KeezTest.PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(1, revision);
@@ -115,7 +117,7 @@ public class KeezFileDbTest {
 		assertTrue(flag);
 		
 		flag = false;
-		db.put("key", 1, data, new PutTestHelp() {
+		db.put("key", 1, data, new KeezTest.PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(2, revision);
@@ -125,7 +127,7 @@ public class KeezFileDbTest {
 		assertTrue(flag);
 		flag = false;
 		
-		db.put("key", 2, data, new PutTestHelp() {
+		db.put("key", 2, data, new KeezTest.PutTestHelp() {
 			@Override
 			public void ok(String key, int revision) {
 				assertEquals(3, revision);
@@ -139,7 +141,7 @@ public class KeezFileDbTest {
 	@Test
 	public void put_should_collide_if_key_exists() {
 		db.put("key", 0, data, PutNoop);
-		db.put("key", 0, data, new PutTestHelp() {
+		db.put("key", 0, data, new KeezTest.PutTestHelp() {
 			@Override
 			public void collision(String key, int yourRev, int foundRev) {
 				assertEquals("key", key);
@@ -153,7 +155,7 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void put_should_collide_if_rev_not_zero_on_create() {
-		db.put("newKey", 1, data, new PutTestHelp() {			
+		db.put("newKey", 1, data, new KeezTest.PutTestHelp() {			
 			public void collision(String key, int yourRev, int foundRev) {
 				assertEquals("newKey", key);
 				assertEquals(1, yourRev);
@@ -168,7 +170,7 @@ public class KeezFileDbTest {
 	public void put_should_collide_if_put_with_old_rev() {
 		db.put("newKey", 0, data, PutNoop);		
 		db.put("newKey", 1, data, PutNoop);		
-		db.put("newKey", 1, data, new PutTestHelp() {
+		db.put("newKey", 1, data, new KeezTest.PutTestHelp() {
 			public void collision(String key, int yourRev, int nextRev) {
 				assertEquals("newKey", key);
 				assertEquals(1, yourRev);
@@ -183,7 +185,7 @@ public class KeezFileDbTest {
 	public void put_should_collide_if_put_with_too_new_rev() {
 		db.put("newKey", 0, data, PutNoop);	
 		db.put("newKey", 1, data, PutNoop);
-		db.put("newKey", 3, data, new PutTestHelp() {
+		db.put("newKey", 3, data, new KeezTest.PutTestHelp() {
 			public void collision(String key, int yourRev, int foundRev) {
 				assertEquals("newKey", key);
 				assertEquals(3, yourRev);
@@ -196,7 +198,7 @@ public class KeezFileDbTest {
 	
 	@Test
 	public void get_should_invoke_not_found_on_no_key() {
-		db.get("somekey", new GetTestHelp() {
+		db.get("somekey", new KeezTest.GetTestHelp() {
 			public void notFound(String key) {
 				assertEquals("somekey", key);
 				flag = true;
@@ -208,7 +210,7 @@ public class KeezFileDbTest {
 	@Test
 	public void get_should_get_value_if_key_exists() {
 		db.put("somekey", 0, data, PutNoop);		
-		db.get("somekey", new GetTestHelp() {
+		db.get("somekey", new KeezTest.GetTestHelp() {
 			public void found(String key, int rev, byte[] foundData) {
 				assertEquals(1, rev);
 				assertEquals("somekey", key);
@@ -226,7 +228,7 @@ public class KeezFileDbTest {
 		db.put("somekey", 1, "otherdata".getBytes(), PutNoop);
 		db.put("somekey", 2, "latest".getBytes(), PutNoop);
 		
-		db.get("somekey", new GetTestHelp() {
+		db.get("somekey", new KeezTest.GetTestHelp() {
 			public void found(String key, int rev, byte[] foundData) {
 				assertEquals(3, rev);
 				assertEquals("somekey", key);
@@ -243,7 +245,7 @@ public class KeezFileDbTest {
 			db.put("somekey", i, data, PutNoop);
 		}
 		db.put("somekey", 10, "latest".getBytes(), PutNoop);
-		db.get("somekey", new GetTestHelp() {
+		db.get("somekey", new KeezTest.GetTestHelp() {
 			public void found(String key, int rev, byte[] foundData) {
 				assertEquals(11, rev);
 				assertEquals("somekey", key);
@@ -399,7 +401,7 @@ public class KeezFileDbTest {
 		
 	@Test
 	public void should_error_if_bad_char_in_key() {
-		db.put("  ", 0, data, new PutTestHelp() {
+		db.put("  ", 0, data, new KeezTest.PutTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
 				flag = true;
@@ -408,7 +410,7 @@ public class KeezFileDbTest {
 		assertTrue(flag);
 		
 		flag = false;
-		db.put("/", 1, data, new PutTestHelp() {
+		db.put("/", 1, data, new KeezTest.PutTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
 				flag = true;
@@ -417,7 +419,7 @@ public class KeezFileDbTest {
 		assertTrue(flag);
 		
 		flag = false;
-		db.get("/", new GetTestHelp() {
+		db.get("/", new KeezTest.GetTestHelp() {
 			public void error(String key, Exception e) {
 				assertTrue(e.getMessage().contains("invalid character in key"));
 				flag = true;
@@ -476,24 +478,7 @@ public class KeezFileDbTest {
 		@Override public void error(String key, Exception e) {}
 	};
 	
-	public static class PutTestHelp extends Put {
 
-		@Override
-		public void ok(String key, int revision) {
-			throw new RuntimeException("unexpected put success");
-		}
-
-		@Override
-		public void collision(String key, int yourRev, int foundRev) {
-			throw new RuntimeException("unexpected put collision");			
-		}
-		
-		@Override
-		public void error(String key, Exception e) {
-			throw new RuntimeException("unexpected put error", e);
-		}
-		
-	}
 	
 	public static class DeleteTestHelp extends Delete {
 
@@ -513,29 +498,15 @@ public class KeezFileDbTest {
 		}		
 	}
 	
-	public static class GetTestHelp extends Get {
-
-		@Override
-		public void found(String key, int rev, byte[] data) {
-			throw new RuntimeException("unexpected found");
-		}
-
-		@Override
-		public void notFound(String key) {
-			throw new RuntimeException("unexpected not found");
-		}
-		
-		@Override
-		public void error(String key, Exception e) {
-			throw new RuntimeException("unexpected error", e);
-		}
-		
-	}
-	
 	public static class ListTestHelp extends List {
 		@Override
 		public void entries(Iterable<Entry> entries) {
 			throw new RuntimeException("unexpected entries call");
+		}
+
+		@Override
+		public void error(Exception ex) {
+			throw new RuntimeException("unexpected error call");			
 		}
 	}
 	
