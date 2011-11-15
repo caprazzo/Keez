@@ -8,7 +8,11 @@ import net.caprazzi.keez.Keez.Put;
 import org.junit.Before;
 import org.junit.Test;
 
-public class KeezTest {
+/**
+ * Abstract test class meant to be subclassed to test specific implementations
+ * Create the Db instance in a @Before methos in the subclass
+ */
+public abstract class KeezTest {
 	
 	protected Db db;
 	protected boolean flag = false;
