@@ -3,7 +3,6 @@ package net.caprazzi.keez.inmemory;
 import java.util.SortedSet;
 
 import net.caprazzi.keez.Keez;
-import net.caprazzi.keez.Keez.Db;
 import net.caprazzi.keez.Keez.Delete;
 import net.caprazzi.keez.Keez.Entry;
 import net.caprazzi.keez.Keez.Get;
@@ -25,6 +24,11 @@ public class KeezInMemory implements Keez.Db {
 	public KeezInMemory() {
 		SortedSetMultimap<String, Value> data = TreeMultimap.create();
 		this.data = Multimaps.synchronizedSortedSetMultimap(data);
+	}
+	
+	@Override
+	public void setAutoPurge(boolean autoPurge) {
+		this.autoPurge = true;
 	}
 	
 	@Override

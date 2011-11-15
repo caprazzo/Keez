@@ -17,7 +17,14 @@ package net.caprazzi.keez;
 public class Keez {
 
 	public interface Db {
-				
+			
+		/**
+		 * If set to true, the implementation should automatically
+		 * remove old revisions when a key is updated
+		 * @param autoPurge
+		 */
+		void setAutoPurge(boolean autoPurge);
+		
 		/**
 		 * Create or Update a key. 
 		 * New keys must have rev=0, while updates must have the same
@@ -68,6 +75,7 @@ public class Keez {
 		 * @param list
 		 */
 		public void list(List callback);
+
 	}
 
 	public static abstract class Get {

@@ -10,7 +10,7 @@ import org.junit.Test;
 
 /**
  * Abstract test class meant to be subclassed to test specific implementations
- * Create the Db instance in a @Before methos in the subclass
+ * Create the Db instance in a @Before methods in the subclass
  */
 public abstract class KeezTest {
 	
@@ -66,6 +66,67 @@ public abstract class KeezTest {
 			@Override
 			public void notFound(String key) {
 				assertEquals("foo", key);
+				flag = true;
+			}
+		});
+		assertTrue(flag);
+	}
+	
+	@Test
+	public void test_should_collide_if_creating_with_non_zero_rev() {
+		db.put("akey", 1, "data".getBytes(), new PutTestHelp() {
+			@Override
+			public void collision(String key, int yourRev, int foundRev) {
+				assertEquals("akey", key);
+				assertEquals(1, yourRev);
+				assertEquals(-1, foundRev);
+				flag = true;
+			}
+		});
+		assertTrue(flag);
+	}
+	
+	@Test
+	public void test_should_collide_if_putting_zero_twice() {
+		db.put("akey", 0, "data".getBytes(), PutOk);
+		db.put("akey", 0, "data".getBytes(), new PutTestHelp() {
+			@Override
+			public void collision(String key, int yourRev, int foundRev) {
+				assertEquals("akey", key);
+				assertEquals(0, yourRev);
+				assertEquals(1, foundRev);
+				flag = true;
+			}
+		});
+		assertTrue(flag);
+	}
+	
+	@Test
+	public void test_should_collide_if_putting_revision_twice() {
+		db.put("akey", 0, "data".getBytes(), PutOk);
+		db.put("akey", 1, "data".getBytes(), PutOk);
+		db.put("akey", 1, "data".getBytes(), new PutTestHelp() {
+			@Override
+			public void collision(String key, int yourRev, int foundRev) {
+				assertEquals("akey", key);
+				assertEquals(1, yourRev);
+				assertEquals(2, foundRev);
+				flag = true;
+			}
+		});
+		assertTrue(flag);
+	}
+	
+	@Test
+	public void test_should_collide_if_skipping_revision_ahead() {
+		db.put("akey", 0, "data".getBytes(), PutOk);
+		db.put("akey", 1, "data".getBytes(), PutOk);
+		db.put("akey", 3, "data".getBytes(), new PutTestHelp() {
+			@Override
+			public void collision(String key, int yourRev, int foundRev) {
+				assertEquals("akey", key);
+				assertEquals(3, yourRev);
+				assertEquals(2, foundRev);
 				flag = true;
 			}
 		});

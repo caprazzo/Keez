@@ -132,4 +132,10 @@ public class KeezAync implements Db {
 		
 	}
 
+	@Override
+	public void setAutoPurge(boolean autoPurge) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

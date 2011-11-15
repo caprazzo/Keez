@@ -313,10 +313,9 @@ public class KeezOnFile implements Keez.Db {
 		 return key.matches("[A-Za-z0-9]+");
 	}
 
+	@Override
 	public void setAutoPurge(boolean autoPurge) {
 		this.autoPurge = autoPurge;
 	}
-
-	
 
 }
