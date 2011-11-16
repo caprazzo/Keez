@@ -24,10 +24,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.sun.istack.internal.NotNull;
 
 public class KeezInMemory implements Keez.Db {
-
 	
 	private SortedSetMultimap<String, Value> data;
 	private boolean autoPurge;

@@ -304,18 +304,6 @@ public class KeezFileDbTest {
 	}
 	
 	@Test
-	public void list_should_find_no_entries_if_empty() {
-		db.list(new KeezTest.ListTestHelp() {
-			@Override
-			public void entries(Iterable<Entry> entries) {
-				assertFalse(entries.iterator().hasNext());
-				flag = true;
-			}
-		});
-		assertTrue(flag);
-	}
-	
-	@Test
 	public void list_should_find_all_entries() {
 		db.put("key0", 0, data, PutNoop);
 		db.put("key1", 0, moredata, PutNoop);

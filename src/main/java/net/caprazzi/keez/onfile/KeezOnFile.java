@@ -328,7 +328,6 @@ public class KeezOnFile implements Keez.Db {
 				Integer revb = getRevision(fb);
 				return reva.compareTo(revb);
 			}
-			
 		});
 		
 		return files;

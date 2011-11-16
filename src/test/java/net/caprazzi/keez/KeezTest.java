@@ -518,8 +518,13 @@ public abstract class KeezTest {
 		db.getRevisions("xxxx", new GetRevisionsTestHelp() {					
 			@Override
 			public void error(String key, Exception e) {
-				called = true;
 				throw new RuntimeException("Exception in error");
+			}
+			
+			@Override
+			public void applicationError(Exception ex) {
+				assertEquals("Exception in error", ex.getMessage());
+				called = true;
 			}
 		});
 		
@@ -847,6 +852,15 @@ public abstract class KeezTest {
 	
 	private static final Delete DeleteOk = new DeleteTestHelp() {
 		@Override public void deleted(String key, byte[] data) {};
+	};
+	
+	protected static final Get GetOk = new GetTestHelp() {
+		@Override public void found(String key, int rev, byte[] data) {};
+	};
+	
+	protected static final Get GetNoop = new GetTestHelp() {
+		@Override public void found(String key, int rev, byte[] data) {};
+		public void notFound(String key) {};
 	};
 	
 }
