@@ -25,6 +25,7 @@ import static net.caprazzi.keez.Helpers.found;
 import static net.caprazzi.keez.Helpers.notFound;
 import static net.caprazzi.keez.Helpers.ok;
 import static net.caprazzi.keez.Helpers.notNull;
+import static net.caprazzi.keez.Helpers.error;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -112,7 +113,7 @@ public class KeezOnFile implements Keez.Db {
 
 				ok(callback, key, newRev);
 			} catch (Exception e) {
-				callback.error(key, e);
+				error(callback, key, e);
 			}
 		}
 	}	
@@ -156,7 +157,7 @@ public class KeezOnFile implements Keez.Db {
 
 				ok(callback, key, foundRev);				
 			} catch (Exception e) {
-				callback.error(key, e);
+				error(callback, key, e);
 			}
 		}
 	}
@@ -188,7 +189,7 @@ public class KeezOnFile implements Keez.Db {
 			} catch (FileNotFoundException ex) {
 				notFound(callback, key);
 			} catch (Exception e) {
-				callback.error(key, e);
+				error(callback, key, e);
 			}
 		}
 	}
@@ -228,7 +229,7 @@ public class KeezOnFile implements Keez.Db {
 			} catch (FileNotFoundException ex) {
 				notFound(callback, key);
 			} catch (IOException e) {
-				callback.error(key, e);
+				error(callback, key, e);
 			}
 		}
 	}
@@ -261,7 +262,7 @@ public class KeezOnFile implements Keez.Db {
 			entries(callback, entries);
 		}
 		catch (Exception e) {
-			callback.error(e);
+			error(callback, e);
 		}
 	}
 	
@@ -297,7 +298,7 @@ public class KeezOnFile implements Keez.Db {
 			found(callback, key, entries);
 		}
 		catch (Exception ex) {
-			callback.error(key, ex);
+			error(callback, key, ex);
 		}
 	}
 

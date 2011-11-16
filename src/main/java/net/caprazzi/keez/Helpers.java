@@ -115,5 +115,50 @@ public class Helpers {
 		if (o == null)
 			throw new NullPointerException();
 	}
+
+	public static void error(Put callback, String key, Exception e) {
+		try {
+			callback.error(key, e);			
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+
+	public static void error(Get callback, String key, Exception e) {
+		try {
+			callback.error(key, e);			
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+
+	public static void error(Delete callback, String key, Exception e) {
+		try {
+			callback.error(key, e);			
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+
+	public static void error(List callback, Exception e) {
+		try {
+			callback.error(e);			
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
+
+	public static void error(GetRevisions callback, String key, Exception e) {
+		try {
+			callback.error(key, e);			
+		}
+		catch (Exception ex) {
+			applicationError(callback, ex);
+		}
+	}
 	
 }

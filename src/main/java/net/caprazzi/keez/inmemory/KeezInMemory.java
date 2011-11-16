@@ -3,10 +3,11 @@ package net.caprazzi.keez.inmemory;
 import static net.caprazzi.keez.Helpers.collision;
 import static net.caprazzi.keez.Helpers.deleted;
 import static net.caprazzi.keez.Helpers.entries;
+import static net.caprazzi.keez.Helpers.error;
 import static net.caprazzi.keez.Helpers.found;
 import static net.caprazzi.keez.Helpers.notFound;
-import static net.caprazzi.keez.Helpers.ok;
 import static net.caprazzi.keez.Helpers.notNull;
+import static net.caprazzi.keez.Helpers.ok;
 
 import java.util.LinkedList;
 import java.util.Set;
@@ -20,8 +21,6 @@ import net.caprazzi.keez.Keez.GetRevisions;
 import net.caprazzi.keez.Keez.List;
 import net.caprazzi.keez.Keez.Put;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -80,10 +79,12 @@ public class KeezInMemory implements Keez.Db {
 			}
 		}
 		catch (Exception e) {
-			callback.error(key, e);
+			error(callback, key, e);			
 		}
 	}
 	
+	
+
 	@Override
 	public void get(String key, Get callback) {
 		notNull(key);
@@ -101,7 +102,7 @@ public class KeezInMemory implements Keez.Db {
 			found(callback, key, revision, body);		
 		}
 		catch (Exception e) {
-			callback.error(key, e);
+			error(callback, key, e);
 		}
 	}
 
@@ -111,7 +112,6 @@ public class KeezInMemory implements Keez.Db {
 		notNull(callback);
 		
 		try {
-			
 			Value value = null;
 			SortedSet<Value> revisions = data.get(key);
 			synchronized (data) {
@@ -129,7 +129,7 @@ public class KeezInMemory implements Keez.Db {
 			}			
 		}
 		catch (Exception e) {
-			callback.error(key, e);
+			error(callback, key, e);
 		}
 	}
 	
@@ -155,7 +155,7 @@ public class KeezInMemory implements Keez.Db {
 			entries(callback, entries);
 		}
 		catch(Exception e) {
-			callback.error(e);
+			error(callback, e);
 		}
 	}
 	
@@ -181,7 +181,7 @@ public class KeezInMemory implements Keez.Db {
 			found(callback, key, entries);
 		}
 		catch(Exception e) {
-			callback.error(key, e);
+			error(callback, key, e);
 		}
 	}
 
